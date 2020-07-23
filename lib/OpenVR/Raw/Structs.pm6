@@ -108,7 +108,7 @@ class DistortionCoordinates_t is repr<CStruct> is export does Indexable {
 }
 
 class Texture_t is repr<CStruct> is export {
-        has Pointer      $.handle      is rw; #=  void *
+        has Pointer      $.handle      is rw; #=  Pointer *
         has ETextureType $.eType       is rw;
         has EColorSpace  $.eColorSpace is rw;
 }
@@ -134,7 +134,7 @@ class VRTextureWithPose_t is repr<CStruct> is export {
 }
 
 class VRTextureDepthInfo_t is repr<CStruct> is export {
-        has Pointer       $.handle; #=  void *
+        has Pointer       $.handle; #=  Pointer *
         HAS HmdMatrix44_t $.mProjection;
         HAS HmdVector2_t  $.vRange;
 }
@@ -504,7 +504,7 @@ class RenderModel_ControllerMode_State_t is repr<CStruct> is export {
 }
 
 class NotificationBitmap_t is repr<CStruct> is export {
-        has Pointer $.m_pImageData;    #= void *
+        has Pointer $.m_pImageData;    #= Pointer *
         has int32   $.m_nWidth         is rw;
         has int32   $.m_nHeight        is rw;
         has int32   $.m_nBytesPerPixel is rw;
@@ -1030,5 +1030,299 @@ class VR_IVRApplications_FnTable is repr<CStruct> is export does OpenVRInterface
             $!GetCurrentSceneProcessId
           )()
         }
+
+}
+
+class VR_IVRExtendedDisplay_FnTable is repr<CStruct> is export {
+        has Pointer $!GetWindowBounds     ;  #= (int32_t * pnX, int32_t * pnY, uint32_t * pnWidth, uint32_t * pnHeight);
+        has Pointer $!GetEyeOutputViewport;  #= (EVREye eEye, uint32_t * pnX, uint32_t * pnY, uint32_t * pnWidth, uint32_t * pnHeight);
+        has Pointer $!GetDXGIOutputInfo   ;  #= (int32_t * pnAdapterIndex, int32_t * pnAdapterOutputIndex);
+
+        method GetWindowBounds (
+          int32  $p  is rw,
+          int32  $p2 is rw,
+          uint32 $w  is rw,
+          uint32 $h  is rw
+        ) {
+          nativecast(
+            :(int32 is rw, int32 is rw, uint32 is rw, uint32 is rw),
+            $!GetWindowBounds
+          )($p, $p2, $w, $h)
+        }
+
+        method GetEyeOutputViewport (
+          EVREye $e,
+          uint32 $p  is rw,
+          uint32 $p2 is rw,
+          uint32 $w  is rw,
+          uint32 $h  is rw
+        ) {
+          nativecast(
+            :(
+              EVREye is rw,
+              uint32 is rw,
+              uint32 is rw,
+              uint32 is rw,
+              uint32 is rw
+            ),
+            $!GetEyeOutputViewport
+          )($e, $p, $p2, $w, $h)
+        }
+
+        method GetDXGIOutputInfo (int32 $ai is rw, int32 $aoi is rw) {
+          nativecast(
+            :(int32 is rw, int32 is rw),
+            $!GetDXGIOutputInfo
+          )($ai, $aoi)
+        }
+
+}
+
+class VR_IVRTrackedCamera_FnTable is export does OpenVRInterface  {
+    has Pointer $!GetCameraErrorNameFromEnum;   #= char * (EVRTrackedCameraError eCameraError);
+    has Pointer $!HasCamera;                    #= EVRTrackedCameraError (TrackedDeviceIndex_t nDeviceIndex, bool * pHasCamera);
+    has Pointer $!GetCameraFrameSize;           #= EVRTrackedCameraError (TrackedDeviceIndex_t nDeviceIndex, EVRTrackedCameraFrameType eFrameType, uint32_t * pnWidth, uint32_t * pnHeight, uint32_t * pnFrameBufferSize);
+    has Pointer $!GetCameraIntrinsics;          #= EVRTrackedCameraError (TrackedDeviceIndex_t nDeviceIndex, uint32_t nCameraIndex, EVRTrackedCameraFrameType eFrameType, HmdVector2_t * pFocalLength, HmdVector2_t * pCenter);
+    has Pointer $!GetCameraProjection;          #= EVRTrackedCameraError (TrackedDeviceIndex_t nDeviceIndex, uint32_t nCameraIndex, EVRTrackedCameraFrameType eFrameType, float flZNear, float flZFar, HmdMatrix44_t * pProjection);
+    has Pointer $!AcquireVideoStreamingService; #= EVRTrackedCameraError (TrackedDeviceIndex_t nDeviceIndex, TrackedCameraHandle_t * pHandle);
+    has Pointer $!ReleaseVideoStreamingService; #= EVRTrackedCameraError (TrackedCameraHandle_t hTrackedCamera);
+    has Pointer $!GetVideoStreamFrameBuffer;    #= EVRTrackedCameraError (TrackedCameraHandle_t hTrackedCamera, EVRTrackedCameraFrameType eFrameType, Pointer * pFrameBuffer, uint32_t nFrameBufferSize, CameraVideoStreamFrameHeader_t * pFrameHeader, uint32_t nFrameHeaderSize);
+    has Pointer $!GetVideoStreamTextureSize;    #= EVRTrackedCameraError (TrackedDeviceIndex_t nDeviceIndex, EVRTrackedCameraFrameType eFrameType, VRTextureBounds_t * pTextureBounds, uint32_t * pnWidth, uint32_t * pnHeight);
+    has Pointer $!GetVideoStreamTextureD3D11;   #= EVRTrackedCameraError (TrackedCameraHandle_t hTrackedCamera, EVRTrackedCameraFrameType eFrameType, Pointer * pD3D11DeviceOrResource, Pointer ** ppD3D11ShaderResourceView, CameraVideoStreamFrameHeader_t * pFrameHeader, uint32_t nFrameHeaderSize);
+    has Pointer $!GetVideoStreamTextureGL;      #= EVRTrackedCameraError (TrackedCameraHandle_t hTrackedCamera, EVRTrackedCameraFrameType eFrameType, glUInt_t * pglTextureId, CameraVideoStreamFrameHeader_t * pFrameHeader, uint32_t nFrameHeaderSize);
+    has Pointer $!ReleaseVideoStreamTextureGL;  #= EVRTrackedCameraError (TrackedCameraHandle_t hTrackedCamera, glUInt_t glTextureId);
+    has Pointer $!SetCameraTrackingSpace;       #= Pointer (ETrackingUniverseOrigin eUniverse);
+    has Pointer $!GetCameraTrackingSpace;       #= ETrackingUniverseOrigin ();
+
+    method GetCameraErrorNameFromEnum (EVRTrackedCameraError $ce is rw) {
+      nativecast(
+        :(EVRTrackedCameraError is rw --> Str),
+        $!GetCameraErrorNameFromEnum
+      )($ce)
+    }
+
+    method HasCamera (TrackedDeviceIndex_t $di is rw, bool $hc is rw) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(TrackedDeviceIndex_t is rw, bool is rw --> EVRTrackedCameraError),
+          $!HasCamera
+        )($di, $hc)
+      );
+    }
+
+    method GetCameraFrameSize (
+      TrackedDeviceIndex_t      $di  is rw,
+      EVRTrackedCameraFrameType $ft  is rw,
+      uint32                    $w   is rw,
+      uint32                    $h   is rw,
+      uint32                    $fbs is rw
+    ) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(
+            TrackedDeviceIndex_t      is rw,
+            EVRTrackedCameraFrameType is rw,
+            uint32                    is rw,
+            uint32                    is rw,
+            uint32                    is rw
+            --> EVRTrackedCameraError
+          ),
+          $!GetCameraFrameSize
+        )($di, $ft, $w, $h, $fbs)
+      );
+    }
+
+    method GetCameraIntrinsics (
+      TrackedDeviceIndex_t      $di is rw,
+      uint32                    $ci,
+      EVRTrackedCameraFrameType $ft is rw,
+      HmdVector2_t              $fl,
+      HmdVector2_t              $c
+    ) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(
+            TrackedDeviceIndex_t      is rw,
+            uint32,
+            EVRTrackedCameraFrameType is rw,
+            HmdVector2_t,
+            HmdVector2_t
+            --> EVRTrackedCameraError
+          ),
+          $!GetCameraIntrinsics
+        )($di, $ci, $ft, $fl, $c)
+      );
+    }
+
+    method GetCameraProjection (
+      TrackedDeviceIndex_t      $di is rw,
+      uint32                    $ci,
+      EVRTrackedCameraFrameType $ft is rw,
+      num32                     $n,
+      num32                     $f,
+      HmdMatrix44_t             $p
+    ) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(
+            TrackedDeviceIndex_t      is rw,
+            uint32,
+            EVRTrackedCameraFrameType is rw,
+            num32,
+            num32,
+            HmdMatrix44_t
+            --> EVRTrackedCameraError
+          ),
+          $!GetCameraProjection
+        )($di, $ci, $ft, $n, $f, $p)
+      );
+    }
+
+    method AcquireVideoStreamingService (
+      TrackedDeviceIndex_t  $di is rw,
+      TrackedCameraHandle_t $h  is rw
+    ) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(
+            TrackedDeviceIndex_t  is rw,
+            TrackedCameraHandle_t is rw
+            --> EVRTrackedCameraError
+          ),
+          $!AcquireVideoStreamingService
+        )($di, $h)
+      );
+    }
+
+    method ReleaseVideoStreamingService (TrackedCameraHandle_t $tc is rw) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(TrackedCameraHandle_t is rw --> EVRTrackedCameraError),
+          $!ReleaseVideoStreamingService
+        )($tc)
+      );
+    }
+
+    method GetVideoStreamFrameBuffer (
+      TrackedCameraHandle_t          $tc is rw,
+      EVRTrackedCameraFrameType      $ft is rw,
+      Pointer                        $fb,
+      uint32                         $fbs,
+      CameraVideoStreamFrameHeader_t $fh,
+      uint32                         $fhs
+    ) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(
+            TrackedCameraHandle_t          is rw,
+            EVRTrackedCameraFrameType      is rw,
+            Pointer,
+            uint32,
+            CameraVideoStreamFrameHeader_t,
+            uint32
+            --> EVRTrackedCameraError
+          ),
+          $!GetVideoStreamFrameBuffer
+        )($tc, $ft, $fb, $fbs, $fh, $fhs)
+      );
+    }
+
+    method GetVideoStreamTextureSize (
+      TrackedDeviceIndex_t      $di is rw,
+      EVRTrackedCameraFrameType $ft is rw,
+      VRTextureBounds_t         $tb,
+      uint32                    $w  is rw,
+      uint32                    $h  is rw
+    ) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(
+            TrackedDeviceIndex_t      is rw,
+            EVRTrackedCameraFrameType is rw,
+            VRTextureBounds_t,
+            uint32                    is rw,
+            uint32                    is rw
+            --> EVRTrackedCameraError
+          ),
+          $!GetVideoStreamTextureSize
+        )($di, $ft, $tb, $w, $h)
+      );
+    }
+
+    method GetVideoStreamTextureD3D11 (
+      TrackedCameraHandle_t          $tc  is rw,
+      EVRTrackedCameraFrameType      $ft  is rw,
+      Pointer                        $dor is rw,
+      CameraVideoStreamFrameHeader_t $fh,
+      uint32                         $fhs
+    ) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(
+            TrackedCameraHandle_t          is rw,
+            EVRTrackedCameraFrameType      is rw,
+            Pointer,
+            CameraVideoStreamFrameHeader_t,
+            uint32
+            --> EVRTrackedCameraError
+          ),
+          $!GetVideoStreamTextureD3D11
+        )($tc, $ft, $dor, $fh, $fhs)
+      );
+    }
+
+    method GetVideoStreamTextureGL (
+      TrackedCameraHandle_t          $tc  is rw,
+      EVRTrackedCameraFrameType      $ft  is rw,
+      glUInt_t                       $ti  is rw,
+      CameraVideoStreamFrameHeader_t $fh,
+      uint32                         $fhs
+    ) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(
+            TrackedCameraHandle_t          is rw,
+            EVRTrackedCameraFrameType      is rw,
+            glUInt_t                       is rw,
+            CameraVideoStreamFrameHeader_t,
+            uint32
+            --> EVRTrackedCameraError
+          ),
+          $!GetVideoStreamTextureGL
+        )($tc, $ft, $ti, $fh, $fhs)
+      );
+    }
+
+    method ReleaseVideoStreamTextureGL (
+      TrackedCameraHandle_t $tc is rw,
+      glUInt_t              $ti is rw
+    ) {
+      EVRTrackedCameraErrorEnum(
+        nativecast(
+          :(
+            TrackedCameraHandle_t     is rw,
+            glUInt_t                  is rw
+            --> EVRTrackedCameraError
+          ),
+          $!ReleaseVideoStreamTextureGL
+        )($tc, $ti)
+      );
+    }
+
+    method SetCameraTrackingSpace (ETrackingUniverseOrigin $u is rw) {
+      nativecast(
+        :(ETrackingUniverseOrigin is rw --> Pointer),
+        $!SetCameraTrackingSpace
+      )($u)
+    }
+
+    method GetCameraTrackingSpace () {
+      ETrackingUniverseOriginEnum(
+        nativecast(
+          :( --> ETrackingUniverseOrigin),
+          $!GetCameraTrackingSpace
+        )()
+      );
+    }
 
 }
