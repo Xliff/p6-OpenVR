@@ -15,14 +15,26 @@ sub indent ($s, $n = 1) {
   $s.lines.map( ('  ' x $n) ~ * ).join("\n")
 }
 
-my token id      { <[\w _]>+ }
-my token typeDec { 'const'? [ <.ws> 'struct' ]? <.ws> <type=id> <.ws> ('*')? }
+my token id { <[\w _]>+ }
+
+my token typeDec {
+  'const'? [ <.ws> 'struct' ]? <.ws> <type=id> <.ws> $<p>=('*')?
+}
+
+sub isTypeRW ($t) {
+  $t[1] ?? ' is rw' !! ''
+}
 
 sub resolveTypeDec ($td) {
   my $rw = False;
 
-  my $rt = do given $td<type>.Str {
-    when 'char' { 'Str' }
+  my $rt = do given ($td<type> // '').Str {
+    when ''       { $_      }
+
+    when 'char'   { 'Str'   }
+
+    when 'float'  { 'num32' }
+    when 'double' { 'num64' }
 
     when
         'int8_t'   |
@@ -33,7 +45,7 @@ sub resolveTypeDec ($td) {
         'uint16_t' |
         'uint32_t' |
         'uint64_t'   { $rw = True if $td<p>;
-                        .substr(0, * - 2)     }
+                       .substr(0, * - 2)     }
 
     default {
       # If not a struct and ends with _t, it needs
@@ -48,16 +60,16 @@ sub resolveTypeDec ($td) {
   ($rt, $rw);
 }
 
-my %methods = (do for VR_IVRApplications_FnTable.^methods.map( *.name ) {
+my %methods = (do for VR_IVRTrackedCamera_FnTable.^methods.map( *.name ) {
   $_ => 1;
 }).Hash;
 
-for VR_IVRApplications_FnTable.^attributes {
+for VR_IVRTrackedCamera_FnTable.^attributes {
   my $mn = .name.substr(2);
 
   my $sd = .WHY.trailing;
   my $m = $sd ~~ rule {
-    <typeDec>
+    <typeDec>?
      [
       '(' (<-[\)]>+) ')'
       ||
@@ -108,15 +120,15 @@ for VR_IVRApplications_FnTable.^attributes {
     @at.push: resolveTypeDec( $am<typeDec> );
   }
 
-  my @norml-at = @at.map( *[0] );
+  my @norml-at = @at.map({ .[0] ~ isTypeRW($_) });
   my $nc = qq:to/NATIVECAST/;
   nativecast(
-    :({ @norml-at.join(', ')}{ $rt[0] ?? " --> { $rt[0] }" !! '' }),
+    :({ @norml-at.join(', ')}{ ($rt && $rt[0]) ?? " --> { $rt[0] }" !! '' }),
     \$!{$mn}
   )({@an.join(', ')})
   NATIVECAST
 
-  if ::("{$rt[0]}Enum") !~~ Failure {
+  if $rt && ::("{$rt[0]}Enum") !~~ Failure {
     $nc = qq:to/ENUMCAST/;
       { $rt[0] }Enum(
       { $nc = indent($nc); }
@@ -124,8 +136,10 @@ for VR_IVRApplications_FnTable.^attributes {
       ENUMCAST
   }
 
+  # Construct proper parameter list with "is rw", if required.
+  my @pl = (@at Z @an).map({ .[0][0] ~ ' ' ~ .[1] ~ isTypeRW( .[0] ) });
   say qq:to/METHOD/;
-    method {$mn} ({ (@norml-at Z @an).map( *.join(' ') ).join(', ') }) \{
+    method {$mn} ({ @pl.join(', ') }) \{
     { $nc = indent($nc) }
     \}
     METHOD
