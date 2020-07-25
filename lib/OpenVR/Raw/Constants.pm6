@@ -1,6 +1,6 @@
 use v6;
 
-unit package OpenVR::Constants;
+unit package OpenVR::Raw::Constants;
 
 constant k_unTrackingStringSize                              is export = 32;
 constant k_unMaxDriverDebugResponseSize                      is export = 32768;
