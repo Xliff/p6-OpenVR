@@ -5,12 +5,11 @@ use NativeCall;
 use OpenVR::Raw::Enums;
 use OpenVR::Raw::Definitions;
 
-unit package OpenVR::Structs;
+unit package OpenVR::Raw::Structs;
 
 class X::OpenVR::Matrix::RangeError is Exception {
   method message { 'RC Index out of range!' }
 }
-
 class X::OpenVR::Array::RangeError is Exception {
   method message { 'Index out of range!' }
 }
@@ -988,7 +987,7 @@ class VR_IVRApplications_FnTable is repr<CStruct> is export does OpenVRInterface
           );
         }
 
-        method GetSceneApplicationState () {
+        method GetSceneApplicationState {
           EVRSceneApplicationStateEnum(
             nativecast(
               :( --> EVRSceneApplicationState),
@@ -1024,7 +1023,7 @@ class VR_IVRApplications_FnTable is repr<CStruct> is export does OpenVRInterface
           );
         }
 
-        method GetCurrentSceneProcessId () {
+        method GetCurrentSceneProcessId {
           nativecast(
             :( --> uint32),
             $!GetCurrentSceneProcessId
@@ -1316,7 +1315,7 @@ class VR_IVRTrackedCamera_FnTable is export does OpenVRInterface  {
       )($u)
     }
 
-    method GetCameraTrackingSpace () {
+    method GetCameraTrackingSpace {
       ETrackingUniverseOriginEnum(
         nativecast(
           :( --> ETrackingUniverseOrigin),
@@ -1324,5 +1323,558 @@ class VR_IVRTrackedCamera_FnTable is export does OpenVRInterface  {
         )()
       );
     }
+
+}
+
+class VR_IVRChaperone_FnTable is repr<CStruct> is export does OpenVRInterface {
+        has Pointer $!GetCalibrationState; #= ChaperoneCalibrationState();
+        has Pointer $!GetPlayAreaSize;     #= bool (float * pSizeX, float * pSizeZ);
+        has Pointer $!GetPlayAreaRect;     #= bool (struct HmdQuad_t * rect);
+        has Pointer $!ReloadInfo;          #= ();
+        has Pointer $!SetSceneColor;       #= (struct HmdColor_t color);
+        has Pointer $!GetBoundsColor;      #= (struct HmdColor_t * pOutputColorArray, int nNumOutputColors, float flCollisionBoundsFadeDistance, struct HmdColor_t * pOutputCameraColor);
+        has Pointer $!AreBoundsVisible;    #= bool ();
+        has Pointer $!ForceBoundsVisible;  #= (bool bForce);
+
+        method GetCalibrationState {
+          ChaperoneCalibrationStateEnum(
+            nativecast(
+              :( --> ChaperoneCalibrationState),
+              $!GetCalibrationState
+            )()
+          );
+        }
+
+        method GetPlayAreaSize (num32 $s, num32 $s2) {
+          nativecast(
+            :(num32, num32 --> bool),
+            $!GetPlayAreaSize
+          )($s, $s2)
+        }
+
+        method GetPlayAreaRect (HmdQuad_t $r) {
+          nativecast(
+            :(HmdQuad_t --> bool),
+            $!GetPlayAreaRect
+          )($r)
+        }
+
+        method ReloadInfo {
+          nativecast(
+            :(),
+            $!ReloadInfo
+          )()
+        }
+
+        method SetSceneColor (HmdColor_t $c) {
+          nativecast(
+            :(HmdColor_t),
+            $!SetSceneColor
+          )($c)
+        }
+
+        method GetBoundsColor (HmdColor_t $oca, int $noc is rw, num32 $cbfd, HmdColor_t $occ) {
+          nativecast(
+            :(HmdColor_t, int is rw, num32, HmdColor_t),
+            $!GetBoundsColor
+          )($oca, $noc, $cbfd, $occ)
+        }
+
+        method AreBoundsVisible {
+          nativecast(
+            :( --> bool),
+            $!AreBoundsVisible
+          )()
+        }
+
+        method ForceBoundsVisible (bool $f is rw) {
+          nativecast(
+            :(bool is rw),
+            $!ForceBoundsVisible
+          )($f)
+        }
+
+}
+
+class VR_IVRResources_FnTable is repr<CStruct> is export does OpenVRInterface {
+        has Pointer $!LoadSharedResource;  #= uint32_t (char * pchResourceName, char * pchBuffer, uint32_t unBufferLen);
+        has Pointer $!GetResourceFullPath; #= uint32_t (char * pchResourceName, char * pchResourceTypeDirectory, char * pchPathBuffer, uint32_t unBufferLen);
+
+        method LoadSharedResource (Str $rn, Str $b, uint32 $bl) {
+          nativecast(
+            :(Str, Str, uint32 --> uint32),
+            $!LoadSharedResource
+          )($rn, $b, $bl)
+        }
+
+        method GetResourceFullPath (Str $rn, Str $rtd, Str $pb, uint32 $bl) {
+          nativecast(
+            :(Str, Str, Str, uint32 --> uint32),
+            $!GetResourceFullPath
+          )($rn, $rtd, $pb, $bl)
+        }
+}
+
+
+class VR_IVRDriverManager_FnTable is repr<CStruct> is export does OpenVRInterface {
+        has Pointer $!GetDriverCount;  #= uint32_t ();
+        has Pointer $!GetDriverName;   #= uint32_t (DriverId_t nDriver, char * pchValue, uint32_t unBufferSize);
+        has Pointer $!GetDriverHandle; #= DriverHandle_t (char * pchDriverName);
+        has Pointer $!IsEnabled;       #= bool (DriverId_t nDriver);
+
+        method GetDriverCount () {
+          nativecast(
+            :( --> uint32),
+            $!GetDriverCount
+          )()
+        }
+
+        method GetDriverName (DriverId_t $d is rw, Str $v, uint32 $bs) {
+          nativecast(
+            :(DriverId_t is rw, Str, uint32 --> uint32),
+            $!GetDriverName
+          )($d, $v, $bs)
+        }
+
+        method GetDriverHandle (Str $dn) {
+          nativecast(
+            :(Str --> DriverHandle_t),
+            $!GetDriverHandle
+          )($dn)
+        }
+
+        method IsEnabled (DriverId_t $d is rw) {
+          nativecast(
+            :(DriverId_t is rw --> bool),
+            $!IsEnabled
+          )($d)
+        }
+
+}
+
+class VR_IVRInput_FnTable is repr<CStruct> is export does OpenVRInterface {
+        has Pointer $!SetActionManifestPath;          #= EVRInputError (char * pchActionManifestPath);
+        has Pointer $!GetActionSetHandle;             #= EVRInputError (char * pchActionSetName, VRActionSetHandle_t * pHandle);
+        has Pointer $!GetActionHandle;                #= EVRInputError (char * pchActionName, VRActionHandle_t * pHandle);
+        has Pointer $!GetInputSourceHandle;           #= EVRInputError (char * pchInputSourcePath, VRInputValueHandle_t * pHandle);
+        has Pointer $!UpdateActionState;              #= EVRInputError (struct VRActiveActionSet_t * pSets, uint32_t unSizeOfVRSelectedActionSet_t, uint32_t unSetCount);
+        has Pointer $!GetDigitalActionData;           #= EVRInputError (VRActionHandle_t action, struct InputDigitalActionData_t * pActionData, uint32_t unActionDataSize, VRInputValueHandle_t ulRestrictToDevice);
+        has Pointer $!GetAnalogActionData;            #= EVRInputError (VRActionHandle_t action, struct InputAnalogActionData_t * pActionData, uint32_t unActionDataSize, VRInputValueHandle_t ulRestrictToDevice);
+        has Pointer $!GetPoseActionDataRelativeToNow; #= EVRInputError (VRActionHandle_t action, ETrackingUniverseOrigin eOrigin, float fPredictedSecondsFromNow, struct InputPoseActionData_t * pActionData, uint32_t unActionDataSize, VRInputValueHandle_t ulRestrictToDevice);
+        has Pointer $!GetPoseActionDataForNextFrame;  #= EVRInputError (VRActionHandle_t action, ETrackingUniverseOrigin eOrigin, struct InputPoseActionData_t * pActionData, uint32_t unActionDataSize, VRInputValueHandle_t ulRestrictToDevice);
+        has Pointer $!GetSkeletalActionData;          #= EVRInputError (VRActionHandle_t action, struct InputSkeletalActionData_t * pActionData, uint32_t unActionDataSize);
+        has Pointer $!GetBoneCount;                   #= EVRInputError (VRActionHandle_t action, uint32_t * pBoneCount);
+        has Pointer $!GetBoneHierarchy;               #= EVRInputError (VRActionHandle_t action, BoneIndex_t * pParentIndices, uint32_t unIndexArayCount);
+        has Pointer $!GetBoneName;                    #= EVRInputError (VRActionHandle_t action, BoneIndex_t nBoneIndex, char * pchBoneName, uint32_t unNameBufferSize);
+        has Pointer $!GetSkeletalReferenceTransforms; #= EVRInputError (VRActionHandle_t action, EVRSkeletalTransformSpace eTransformSpace, EVRSkeletalReferencePose eReferencePose, struct VRBoneTransform_t * pTransformArray, uint32_t unTransformArrayCount);
+        has Pointer $!GetSkeletalTrackingLevel;       #= EVRInputError (VRActionHandle_t action, EVRSkeletalTrackingLevel * pSkeletalTrackingLevel);
+        has Pointer $!GetSkeletalBoneData;            #= EVRInputError (VRActionHandle_t action, EVRSkeletalTransformSpace eTransformSpace, EVRSkeletalMotionRange eMotionRange, struct VRBoneTransform_t * pTransformArray, uint32_t unTransformArrayCount);
+        has Pointer $!GetSkeletalSummaryData;         #= EVRInputError (VRActionHandle_t action, EVRSummaryType eSummaryType, struct VRSkeletalSummaryData_t * pSkeletalSummaryData);
+        has Pointer $!GetSkeletalBoneDataCompressed;  #= EVRInputError (VRActionHandle_t action, EVRSkeletalMotionRange eMotionRange, void * pvCompressedData, uint32_t unCompressedSize, uint32_t * punRequiredCompressedSize);
+        has Pointer $!DecompressSkeletalBoneData;     #= EVRInputError (void * pvCompressedBuffer, uint32_t unCompressedBufferSize, EVRSkeletalTransformSpace eTransformSpace, struct VRBoneTransform_t * pTransformArray, uint32_t unTransformArrayCount);
+        has Pointer $!TriggerHapticVibrationAction;   #= EVRInputError (VRActionHandle_t action, float fStartSecondsFromNow, float fDurationSeconds, float fFrequency, float fAmplitude, VRInputValueHandle_t ulRestrictToDevice);
+        has Pointer $!GetActionOrigins;               #= EVRInputError (VRActionSetHandle_t actionSetHandle, VRActionHandle_t digitalActionHandle, VRInputValueHandle_t * originsOut, uint32_t originOutCount);
+        has Pointer $!GetOriginLocalizedName;         #= EVRInputError (VRInputValueHandle_t origin, char * pchNameArray, uint32_t unNameArraySize, int32_t unStringSectionsToInclude);
+        has Pointer $!GetOriginTrackedDeviceInfo;     #= EVRInputError (VRInputValueHandle_t origin, struct InputOriginInfo_t * pOriginInfo, uint32_t unOriginInfoSize);
+        has Pointer $!GetActionBindingInfo;           #= EVRInputError (VRActionHandle_t action, struct InputBindingInfo_t * pOriginInfo, uint32_t unBindingInfoSize, uint32_t unBindingInfoCount, uint32_t * punReturnedBindingInfoCount);
+        has Pointer $!ShowActionOrigins;              #= EVRInputError (VRActionSetHandle_t actionSetHandle, VRActionHandle_t ulActionHandle);
+        has Pointer $!ShowBindingsForActionSet;       #= EVRInputError (struct VRActiveActionSet_t * pSets, uint32_t unSizeOfVRSelectedActionSet_t, uint32_t unSetCount, VRInputValueHandle_t originToHighlight);
+        has Pointer $!IsUsingLegacyInput;             #= bool ();
+        has Pointer $!OpenBindingUI;                  #= EVRInputError (char * pchAppKey, VRActionSetHandle_t ulActionSetHandle, VRInputValueHandle_t ulDeviceHandle, bool bShowOnDesktop);
+
+        method SetActionManifestPath (Str $amp) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(Str --> EVRInputError),
+              $!SetActionManifestPath
+            )($amp)
+          );
+        }
+
+        method GetActionSetHandle (Str $asn, VRActionSetHandle_t $h is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(Str, VRActionSetHandle_t is rw --> EVRInputError),
+              $!GetActionSetHandle
+            )($asn, $h)
+          );
+        }
+
+        method GetActionHandle (Str $an, VRActionHandle_t $h is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(Str, VRActionHandle_t is rw --> EVRInputError),
+              $!GetActionHandle
+            )($an, $h)
+          );
+        }
+
+        method GetInputSourceHandle (Str $isp, VRInputValueHandle_t $h is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(Str, VRInputValueHandle_t is rw --> EVRInputError),
+              $!GetInputSourceHandle
+            )($isp, $h)
+          );
+        }
+
+        method UpdateActionState (VRActiveActionSet_t $s, uint32 $sosas, uint32 $sc) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActiveActionSet_t, uint32, uint32 --> EVRInputError),
+              $!UpdateActionState
+            )($s, $sosas, $sc)
+          );
+        }
+
+        method GetDigitalActionData (VRActionHandle_t $a is rw, InputDigitalActionData_t $ad, uint32 $ads, VRInputValueHandle_t $rtd is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, InputDigitalActionData_t, uint32, VRInputValueHandle_t is rw --> EVRInputError),
+              $!GetDigitalActionData
+            )($a, $ad, $ads, $rtd)
+          );
+        }
+
+        method GetAnalogActionData (VRActionHandle_t $a is rw, InputAnalogActionData_t $ad, uint32 $ads, VRInputValueHandle_t $rtd is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, InputAnalogActionData_t, uint32, VRInputValueHandle_t is rw --> EVRInputError),
+              $!GetAnalogActionData
+            )($a, $ad, $ads, $rtd)
+          );
+        }
+
+        method GetPoseActionDataRelativeToNow (VRActionHandle_t $a is rw, ETrackingUniverseOrigin $o is rw, num32 $psfn, InputPoseActionData_t $ad, uint32 $ads, VRInputValueHandle_t $rtd is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, ETrackingUniverseOrigin is rw, num32, InputPoseActionData_t, uint32, VRInputValueHandle_t is rw --> EVRInputError),
+              $!GetPoseActionDataRelativeToNow
+            )($a, $o, $psfn, $ad, $ads, $rtd)
+          );
+        }
+
+        method GetPoseActionDataForNextFrame (VRActionHandle_t $a is rw, ETrackingUniverseOrigin $o is rw, InputPoseActionData_t $ad, uint32 $ads, VRInputValueHandle_t $rtd is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, ETrackingUniverseOrigin is rw, InputPoseActionData_t, uint32, VRInputValueHandle_t is rw --> EVRInputError),
+              $!GetPoseActionDataForNextFrame
+            )($a, $o, $ad, $ads, $rtd)
+          );
+        }
+
+        method GetSkeletalActionData (VRActionHandle_t $a is rw, InputSkeletalActionData_t $ad, uint32 $ads) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, InputSkeletalActionData_t, uint32 --> EVRInputError),
+              $!GetSkeletalActionData
+            )($a, $ad, $ads)
+          );
+        }
+
+        method GetBoneCount (VRActionHandle_t $a is rw, uint32 $bc is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, uint32 is rw --> EVRInputError),
+              $!GetBoneCount
+            )($a, $bc)
+          );
+        }
+
+        method GetBoneHierarchy (VRActionHandle_t $a is rw, BoneIndex_t $pi is rw, uint32 $iac) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, BoneIndex_t is rw, uint32 --> EVRInputError),
+              $!GetBoneHierarchy
+            )($a, $pi, $iac)
+          );
+        }
+
+        method GetBoneName (VRActionHandle_t $a is rw, BoneIndex_t $bi is rw, Str $bn, uint32 $nbs) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, BoneIndex_t is rw, Str, uint32 --> EVRInputError),
+              $!GetBoneName
+            )($a, $bi, $bn, $nbs)
+          );
+        }
+
+        method GetSkeletalReferenceTransforms (VRActionHandle_t $a is rw, EVRSkeletalTransformSpace $ts is rw, EVRSkeletalReferencePose $rp is rw, VRBoneTransform_t $ta, uint32 $tac) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, EVRSkeletalTransformSpace is rw, EVRSkeletalReferencePose is rw, VRBoneTransform_t, uint32 --> EVRInputError),
+              $!GetSkeletalReferenceTransforms
+            )($a, $ts, $rp, $ta, $tac)
+          );
+        }
+
+        method GetSkeletalTrackingLevel (VRActionHandle_t $a is rw, EVRSkeletalTrackingLevel $stl is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, EVRSkeletalTrackingLevel is rw --> EVRInputError),
+              $!GetSkeletalTrackingLevel
+            )($a, $stl)
+          );
+        }
+
+        method GetSkeletalBoneData (VRActionHandle_t $a is rw, EVRSkeletalTransformSpace $ts is rw, EVRSkeletalMotionRange $mr is rw, VRBoneTransform_t $ta, uint32 $tac) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, EVRSkeletalTransformSpace is rw, EVRSkeletalMotionRange is rw, VRBoneTransform_t, uint32 --> EVRInputError),
+              $!GetSkeletalBoneData
+            )($a, $ts, $mr, $ta, $tac)
+          );
+        }
+
+        method GetSkeletalSummaryData (VRActionHandle_t $a is rw, EVRSummaryType $st is rw, VRSkeletalSummaryData_t $ssd) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, EVRSummaryType is rw, VRSkeletalSummaryData_t --> EVRInputError),
+              $!GetSkeletalSummaryData
+            )($a, $st, $ssd)
+          );
+        }
+
+        method GetSkeletalBoneDataCompressed (VRActionHandle_t $a is rw, EVRSkeletalMotionRange $mr is rw, void $cd is rw, uint32 $cs, uint32 $rcs is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, EVRSkeletalMotionRange is rw, void is rw, uint32, uint32 is rw --> EVRInputError),
+              $!GetSkeletalBoneDataCompressed
+            )($a, $mr, $cd, $cs, $rcs)
+          );
+        }
+
+        method DecompressSkeletalBoneData (void $cb is rw, uint32 $cbs, EVRSkeletalTransformSpace $ts is rw, VRBoneTransform_t $ta, uint32 $tac) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(void is rw, uint32, EVRSkeletalTransformSpace is rw, VRBoneTransform_t, uint32 --> EVRInputError),
+              $!DecompressSkeletalBoneData
+            )($cb, $cbs, $ts, $ta, $tac)
+          );
+        }
+
+        method TriggerHapticVibrationAction (VRActionHandle_t $a is rw, num32 $ssfn, num32 $ds, num32 $f, num32 $a2, VRInputValueHandle_t $rtd is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, num32, num32, num32, num32, VRInputValueHandle_t is rw --> EVRInputError),
+              $!TriggerHapticVibrationAction
+            )($a, $ssfn, $ds, $f, $a2, $rtd)
+          );
+        }
+
+        method GetActionOrigins (VRActionSetHandle_t $sh is rw, VRActionHandle_t $ah is rw, VRInputValueHandle_t $o is rw, uint32 $oc) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionSetHandle_t is rw, VRActionHandle_t is rw, VRInputValueHandle_t is rw, uint32 --> EVRInputError),
+              $!GetActionOrigins
+            )($sh, $ah, $o, $oc)
+          );
+        }
+
+        method GetOriginLocalizedName (VRInputValueHandle_t $o is rw, Str $na, uint32 $nas, int32 $ssti) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRInputValueHandle_t is rw, Str, uint32, int32 --> EVRInputError),
+              $!GetOriginLocalizedName
+            )($o, $na, $nas, $ssti)
+          );
+        }
+
+        method GetOriginTrackedDeviceInfo (VRInputValueHandle_t $o is rw, InputOriginInfo_t $oi, uint32 $ois) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRInputValueHandle_t is rw, InputOriginInfo_t, uint32 --> EVRInputError),
+              $!GetOriginTrackedDeviceInfo
+            )($o, $oi, $ois)
+          );
+        }
+
+        method GetActionBindingInfo (VRActionHandle_t $a is rw, InputBindingInfo_t $oi, uint32 $bis, uint32 $bic, uint32 $rbic is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionHandle_t is rw, InputBindingInfo_t, uint32, uint32, uint32 is rw --> EVRInputError),
+              $!GetActionBindingInfo
+            )($a, $oi, $bis, $bic, $rbic)
+          );
+        }
+
+        method ShowActionOrigins (VRActionSetHandle_t $sh is rw, VRActionHandle_t $ah is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActionSetHandle_t is rw, VRActionHandle_t is rw --> EVRInputError),
+              $!ShowActionOrigins
+            )($sh, $ah)
+          );
+        }
+
+        method ShowBindingsForActionSet (VRActiveActionSet_t $s, uint32 $sosas, uint32 $sc, VRInputValueHandle_t $th is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(VRActiveActionSet_t, uint32, uint32, VRInputValueHandle_t is rw --> EVRInputError),
+              $!ShowBindingsForActionSet
+            )($s, $sosas, $sc, $th)
+          );
+        }
+
+        method IsUsingLegacyInput () {
+          nativecast(
+            :( --> bool),
+            $!IsUsingLegacyInput
+          )()
+        }
+
+        method OpenBindingUI (Str $ak, VRActionSetHandle_t $ash is rw, VRInputValueHandle_t $dh is rw, bool $sod is rw) {
+          EVRInputErrorEnum(
+            nativecast(
+              :(Str, VRActionSetHandle_t is rw, VRInputValueHandle_t is rw, bool is rw --> EVRInputError),
+              $!OpenBindingUI
+            )($ak, $ash, $dh, $sod)
+          );
+        }
+}
+
+class VR_IVRIOBuffer_FnTable is repr<CStruct> is export does OpenVRInterface {
+        has Pointer $!Open;              #= EIOBufferError (char * pchPath, EIOBufferMode mode, uint32_t unElementSize, uint32_t unElements, IOBufferHandle_t * pulBuffer);
+        has Pointer $!Close;             #= EIOBufferError (IOBufferHandle_t ulBuffer);
+        has Pointer $!Read;              #= EIOBufferError (IOBufferHandle_t ulBuffer, void * pDst, uint32_t unBytes, uint32_t * punRead);
+        has Pointer $!Write;             #= EIOBufferError (IOBufferHandle_t ulBuffer, void * pSrc, uint32_t unBytes);
+        has Pointer $!PropertyContainer; #= PropertyContainerHandle_t (IOBufferHandle_t ulBuffer);
+        has Pointer $!HasReaders;        #= bool (IOBufferHandle_t ulBuffer);
+
+        method Open (Str $p, EIOBufferMode $m is rw, uint32 $es, uint32 $e, IOBufferHandle_t $b is rw) {
+          EIOBufferErrorEnum(
+            nativecast(
+              :(Str, EIOBufferMode is rw, uint32, uint32, IOBufferHandle_t is rw --> EIOBufferError),
+              $!Open
+            )($p, $m, $es, $e, $b)
+          );
+        }
+
+        method Close (IOBufferHandle_t $b is rw) {
+          EIOBufferErrorEnum(
+            nativecast(
+              :(IOBufferHandle_t is rw --> EIOBufferError),
+              $!Close
+            )($b)
+          );
+        }
+
+        method Read (IOBufferHandle_t $b is rw, void $d is rw, uint32 $b2, uint32 $r is rw) {
+          EIOBufferErrorEnum(
+            nativecast(
+              :(IOBufferHandle_t is rw, void is rw, uint32, uint32 is rw --> EIOBufferError),
+              $!Read
+            )($b, $d, $b2, $r)
+          );
+        }
+
+        method Write (IOBufferHandle_t $b is rw, void $s is rw, uint32 $b2) {
+          EIOBufferErrorEnum(
+            nativecast(
+              :(IOBufferHandle_t is rw, void is rw, uint32 --> EIOBufferError),
+              $!Write
+            )($b, $s, $b2)
+          );
+        }
+
+        method PropertyContainer (IOBufferHandle_t $b is rw) {
+          nativecast(
+            :(IOBufferHandle_t is rw --> PropertyContainerHandle_t),
+            $!PropertyContainer
+          )($b)
+        }
+
+        method HasReaders (IOBufferHandle_t $b is rw) {
+          nativecast(
+            :(IOBufferHandle_t is rw --> bool),
+            $!HasReaders
+          )($b)
+        }
+
+}
+
+class VR_IVRSpatialAnchors_FnTable is repr<CStruct> is export does OpenVRInterface {
+        has Pointer $!CreateSpatialAnchorFromDescriptor; #= EVRSpatialAnchorError (char * pchDescriptor, SpatialAnchorHandle_t * pHandleOut);
+        has Pointer $!CreateSpatialAnchorFromPose;       #= EVRSpatialAnchorError (TrackedDeviceIndex_t unDeviceIndex, ETrackingUniverseOrigin eOrigin, struct SpatialAnchorPose_t * pPose, SpatialAnchorHandle_t * pHandleOut);
+        has Pointer $!GetSpatialAnchorPose;              #= EVRSpatialAnchorError (SpatialAnchorHandle_t unHandle, ETrackingUniverseOrigin eOrigin, struct SpatialAnchorPose_t * pPoseOut);
+        has Pointer $!GetSpatialAnchorDescriptor;        #= EVRSpatialAnchorError (SpatialAnchorHandle_t unHandle, char * pchDescriptorOut, uint32_t * punDescriptorBufferLenInOut);
+
+        method CreateSpatialAnchorFromDescriptor (Str $d, SpatialAnchorHandle_t $ho is rw) {
+          EVRSpatialAnchorErrorEnum(
+            nativecast(
+              :(Str, SpatialAnchorHandle_t is rw --> EVRSpatialAnchorError),
+              $!CreateSpatialAnchorFromDescriptor
+            )($d, $ho)
+          );
+        }
+
+        method CreateSpatialAnchorFromPose (TrackedDeviceIndex_t $di is rw, ETrackingUniverseOrigin $o is rw, SpatialAnchorPose_t $p, SpatialAnchorHandle_t $ho is rw) {
+          EVRSpatialAnchorErrorEnum(
+            nativecast(
+              :(TrackedDeviceIndex_t is rw, ETrackingUniverseOrigin is rw, SpatialAnchorPose_t, SpatialAnchorHandle_t is rw --> EVRSpatialAnchorError),
+              $!CreateSpatialAnchorFromPose
+            )($di, $o, $p, $ho)
+          );
+        }
+
+        method GetSpatialAnchorPose (SpatialAnchorHandle_t $h is rw, ETrackingUniverseOrigin $o is rw, SpatialAnchorPose_t $po) {
+          EVRSpatialAnchorErrorEnum(
+            nativecast(
+              :(SpatialAnchorHandle_t is rw, ETrackingUniverseOrigin is rw, SpatialAnchorPose_t --> EVRSpatialAnchorError),
+              $!GetSpatialAnchorPose
+            )($h, $o, $po)
+          );
+        }
+
+        method GetSpatialAnchorDescriptor (SpatialAnchorHandle_t $h is rw, Str $do, uint32 $dblio is rw) {
+          EVRSpatialAnchorErrorEnum(
+            nativecast(
+              :(SpatialAnchorHandle_t is rw, Str, uint32 is rw --> EVRSpatialAnchorError),
+              $!GetSpatialAnchorDescriptor
+            )($h, $do, $dblio)
+          );
+        }
+
+}
+
+class VR_IVRDebug_FnTable is repr<CStruct> is export does OpenVRInterface {
+        has Pointer $!EmitVrProfilerEvent;   #= EVRDebugError (char * pchMessage);
+        has Pointer $!BeginVrProfilerEvent;  #= EVRDebugError (VrProfilerEventHandle_t * pHandleOut);
+        has Pointer $!FinishVrProfilerEvent; #= EVRDebugError (VrProfilerEventHandle_t hHandle, char * pchMessage);
+        has Pointer $!DriverDebugRequest;    #= uint32_t (TrackedDeviceIndex_t unDeviceIndex, char * pchRequest, char * pchResponseBuffer, uint32_t unResponseBufferSize);
+
+        method EmitVrProfilerEvent (Str $m) {
+          EVRDebugErrorEnum(
+            nativecast(
+              :(Str --> EVRDebugError),
+              $!EmitVrProfilerEvent
+            )($m)
+          );
+        }
+
+        method BeginVrProfilerEvent (VrProfilerEventHandle_t $ho is rw) {
+          EVRDebugErrorEnum(
+            nativecast(
+              :(VrProfilerEventHandle_t is rw --> EVRDebugError),
+              $!BeginVrProfilerEvent
+            )($ho)
+          );
+        }
+
+        method FinishVrProfilerEvent (VrProfilerEventHandle_t $h is rw, Str $m) {
+          EVRDebugErrorEnum(
+            nativecast(
+              :(VrProfilerEventHandle_t is rw, Str --> EVRDebugError),
+              $!FinishVrProfilerEvent
+            )($h, $m)
+          );
+        }
+
+        method DriverDebugRequest (TrackedDeviceIndex_t $di is rw, Str $r, Str $rb, uint32 $rbs) {
+          nativecast(
+            :(TrackedDeviceIndex_t is rw, Str, Str, uint32 --> uint32),
+            $!DriverDebugRequest
+          )($di, $r, $rb, $rbs)
+        }
 
 }
