@@ -721,6 +721,9 @@ class VROverlayIntersectionMaskPrimitive_t is repr<CStruct> is export  {
         HAS VROverlayIntersectionMaskPrimitive_Data_t $.m_Primitive;
 }
 
+# timotimo++ x Inf - For the function pointer strategy
+# See: https://colabti.org/irclogger/irclogger_log/perl6?date=2019-09-21#l585
+
 class VR_IVRApplications_FnTable is repr<CStruct> is export does OpenVRInterface {
         has Pointer $!AddApplicationManifest;               #= EVRApplicationError (char * pchApplicationManifestFullPath, bool bTemporary);
         has Pointer $!RemoveApplicationManifest;            #= EVRApplicationError (char * pchApplicationManifestFullPath);
