@@ -1,5 +1,16 @@
 use v6;
 
+use OpenVR::Raw::Pre_Subs;
+
+# cw: HAS to be our scoped and exported? -- Weird ness. Implicit package
+#     dragons?
+our %NEW-EXPORTS is export;
+
+sub EXPORT {
+  %NEW-EXPORTS.append( EXPORT::DEFAULT::.pairs );
+  %NEW-EXPORTS;
+}
+
 unit package OpenVR::Raw::Enums;
 
 constant ChaperoneCalibrationState is export := uint32;
@@ -1263,3 +1274,93 @@ our enum VROverlayTransformTypeEnum is export (
   VROverlayTransformType_VROverlayTransform_SystemOverlay         => 2,
   VROverlayTransformType_VROverlayTransform_TrackedComponent      => 3,
 );
+
+# PropertyTypeTag_t
+our enum PropertyTypeTagEnum is export (
+  k_unInvalidPropertyTag           =>     0,
+  k_unFloatPropertyTag             =>     1,
+  k_unInt32PropertyTag             =>     2,
+  k_unUint64PropertyTag            =>     3,
+  k_unBoolPropertyTag              =>     4,
+  k_unStringPropertyTag            =>     5,
+
+  k_unHmdMatrix34PropertyTag       =>    20,
+  k_unHmdMatrix44PropertyTag       =>    21,
+  k_unHmdVector3PropertyTag        =>    22,
+  k_unHmdVector4PropertyTag        =>    23,
+  k_unHmdVector2PropertyTag        =>    24,
+  k_unHmdQuadPropertyTag           =>    25,
+
+  k_unHiddenAreaPropertyTag        =>    30,
+  k_unPathHandleInfoTag            =>    31,
+  k_unActionPropertyTag            =>    32,
+  k_unInputValuePropertyTag        =>    33,
+  k_unWildcardPropertyTag          =>    34,
+  k_unHapticVibrationPropertyTag   =>    35,
+  k_unSkeletonPropertyTag          =>    36,
+
+  k_unSpatialAnchorPosePropertyTag =>    40,
+  k_unJsonPropertyTag              =>    41,
+  k_unActiveActionSetPropertyTag   =>    42,
+
+  k_unOpenVRInternalReserved_Start =>  1000,
+  k_unOpenVRInternalReserved_End   => 10000
+);
+
+# No type association
+our enum SteamVRVersionEnum is export (
+  k_nSteamVRVersionMajor => 1,
+  k_nSteamVRVersionMinor => 8,
+  k_nSteamVRVersionBuild => 19
+);
+
+BEGIN {
+  EXPORT::DEFAULT::.pairs.gist.say;
+
+  for EXPORT::DEFAULT::.pairs.grep({
+    .key.defined && .key.ends-with('Enum')
+  }).sort( *.key ) -> \enum  {
+    my %e-pairs = enum.value.enums.pairs.Hash;
+    my @e-keys = %e-pairs.keys;
+    my $prefix = getLongestSubstr( |@e-keys );
+
+    say "Enum { enum.key }: $prefix" if %*ENV<OPENVR_DEBUG>;
+
+    my $prefix-count = count-substring($prefix, '_');
+    if $prefix-count >= 1 {
+      # Trim to 2 tokens, max!
+      my $to = min($prefix-count, 2);
+      for 1..$to  {
+        # cw: keep all defs from loop until entire loop is processed.
+        #     if ANY collisions, drop whole set of defs!
+        my $collided = False;
+        my %NEW-KEYS;
+        for @e-keys -> \enum-key {
+          my $loop-prefix = $prefix.split(/_/)[^$_].join('_') ~ '_';
+          my $nvn = enum-key.subst($loop-prefix, '');
+          #say "EK: { enum-key }";
+          my $nvv := ::EXPORT::DEFAULT::{enum-key};
+          #say "NVV: { $nvv }";
+
+          # Collision detection
+          if [&&](
+            EXPORT::DEFAULT::{$nvn}:exists.not,
+                 %NEW-EXPORTS{$nvn}:exists.not
+          ) {
+            # cw: YYY - Bind to enum constant in EXPORT table, instead
+            %NEW-KEYS{$nvn} := $nvv;
+          } else {
+            $collided = True;
+          }
+        }
+        if $collided.not {
+          %NEW-EXPORTS{.key} := .value for %NEW-KEYS.pairs
+        } else {
+          my $nk = %NEW-KEYS.keys.join(', ');
+          warn  "A key in ({$nk}) already exists in EXPORT table. Skipping..."
+            if %*ENV<OPENVR_DEBUG>;
+        }
+      }
+    }
+  }
+}
