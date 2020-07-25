@@ -1,14 +1,16 @@
+use OpenVR::Raw::Enums;
 use OpenVR::Raw::Constants;
 use OpenVR::Raw::Definitions;
-use OpenVR::Raw::Enums;
 use OpenVR::Raw::Structs;
 
 my $ovrDefs = "/usr/include/openvr/openvr.h".IO.slurp;
 
 my %listed = (
   # False Positives
-  k_unMaxCameras             => 1,
-  k_unTrackedDeviceIndex_Hmd => 1,
+  k_unMaxCameras                     => 1,
+  k_unMaxSpatialAnchorDescriptorSize => 1,  #= Comment
+  unSizeOfVRSelectedActionSet_t      => 1,  #= Variable name
+  VR_BoneTransform_t                 => 1   #= Comment
 );
 
 for ($ovrDefs ~~ m:g/^^ ["struct" | "enum" ] " " (<[_ \w]>+)  /)[] {
