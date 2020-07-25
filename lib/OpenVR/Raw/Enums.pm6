@@ -5,10 +5,13 @@ use OpenVR::Raw::Pre_Subs;
 # cw: HAS to be our scoped and exported? -- Weird ness. Implicit package
 #     dragons?
 our %OPENVR-RAW-ENUMS-NEW-EXPORTS is export;
+our $export-count = 0;
 
 sub EXPORT {
-  %OPENVR-RAW-ENUMS-NEW-EXPORTS.append( EXPORT::DEFAULT::.pairs );
-  %OPENVR-RAW-ENUMS-NEW-EXPORTS;
+  %OPENVR-RAW-ENUMS-NEW-EXPORTS.append( EXPORT::DEFAULT::.pairs )
+    unless $export-count;
+  $export-count++;
+  %OPENVR-RAW-ENUMS-NEW-EXPORTS
 }
 
 unit package OpenVR::Raw::Enums;
