@@ -544,6 +544,20 @@ class InputSkeletalActionData_t is repr<CStruct> is export {
         has VRInputValueHandle_t $.activeOrigin is rw;
 }
 
+class VRControllerState001_t is repr<CStruct> is export {
+        # If packet num matches that on your prior call, then the controller state hasn't been changed since
+        # your last call and there is no need to process it
+        has uint32 $.unPacketNum     is rw;
+
+        # bit flags for each of the buttons. Use ButtonMaskFromId to turn an ID into a mask
+        has uint64 $.ulButtonPressed is rw;
+        has uint64 $.ulButtonTouched is rw;
+
+        # Axis data for the controller's analog inputs
+        #has VRControllerAxis_t @rAxis[ k_unControllerStateAxisCount ] is CArray;
+}
+
+
 sub setCharArray($a, $s, $l, $c is rw) {
   X::OpenVR::ExcessiveStringLength.new.throw unless $s.chars <= $l;
 
