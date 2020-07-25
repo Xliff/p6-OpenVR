@@ -4,11 +4,11 @@ use OpenVR::Raw::Pre_Subs;
 
 # cw: HAS to be our scoped and exported? -- Weird ness. Implicit package
 #     dragons?
-our %NEW-EXPORTS is export;
+our %OPENVR-RAW-ENUMS-NEW-EXPORTS is export;
 
 sub EXPORT {
-  %NEW-EXPORTS.append( EXPORT::DEFAULT::.pairs );
-  %NEW-EXPORTS;
+  %OPENVR-RAW-ENUMS-NEW-EXPORTS.append( EXPORT::DEFAULT::.pairs );
+  %OPENVR-RAW-ENUMS-NEW-EXPORTS;
 }
 
 unit package OpenVR::Raw::Enums;
@@ -1315,8 +1315,6 @@ our enum SteamVRVersionEnum is export (
 );
 
 BEGIN {
-  EXPORT::DEFAULT::.pairs.gist.say;
-
   for EXPORT::DEFAULT::.pairs.grep({
     .key.defined && .key.ends-with('Enum')
   }).sort( *.key ) -> \enum  {
@@ -1328,9 +1326,9 @@ BEGIN {
 
     my $prefix-count = count-substring($prefix, '_');
     if $prefix-count >= 1 {
-      # Trim to 2 tokens, max!
-      my $to = min($prefix-count, 2);
-      for 1..$to  {
+      # Trim up to 3 tokens max!
+      my $to = min($prefix-count, 3);
+      for ^$to  {
         # cw: keep all defs from loop until entire loop is processed.
         #     if ANY collisions, drop whole set of defs!
         my $collided = False;
@@ -1344,8 +1342,8 @@ BEGIN {
 
           # Collision detection
           if [&&](
-            EXPORT::DEFAULT::{$nvn}:exists.not,
-                 %NEW-EXPORTS{$nvn}:exists.not
+                        EXPORT::DEFAULT::{$nvn}:exists.not,
+            %OPENVR-RAW-ENUMS-NEW-EXPORTS{$nvn}:exists.not
           ) {
             # cw: YYY - Bind to enum constant in EXPORT table, instead
             %NEW-KEYS{$nvn} := $nvv;
@@ -1354,7 +1352,7 @@ BEGIN {
           }
         }
         if $collided.not {
-          %NEW-EXPORTS{.key} := .value for %NEW-KEYS.pairs
+          %OPENVR-RAW-ENUMS-NEW-EXPORTS{.key} := .value for %NEW-KEYS.pairs
         } else {
           my $nk = %NEW-KEYS.keys.join(', ');
           warn  "A key in ({$nk}) already exists in EXPORT table. Skipping..."
